@@ -61,8 +61,7 @@ string getFormattedTime()
 void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, int count, const string &client_id, const string &instrument, int quantity, const string &price_string, double price, ofstream &output, Order_book &order)
 {
 
-    int s_check = 0;
-    int b_check = 0;
+    
 
     if (side == 1)
     { // Buy
@@ -72,7 +71,7 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
             order.status_int = 0;
             order.status = "New";
 
-            output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << quantity << "," << price_string << ",  -  ," << getFormattedTime() << endl;
+            output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << order.quantity << "," << price_string << ",  -  ," << getFormattedTime() << endl;
 
             buy.push_back(order);
             sort(buy.begin(), buy.end(), compareBuy);
@@ -86,14 +85,14 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
                 while ((!sell.empty()) && (sell[0].price <= price))
                 {
 
-                    if (sell[0].quantity == quantity)
+                    if (sell[0].quantity == order.quantity)
                     {
                         order.status_int = 2;
                         order.status = "Fill";
                         sell[0].status_int = 2;
                         sell[0].status = "Fill";
-                        output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
-                        output << "ord" << sell[0].ord_id << "," << sell[0].client_id << "," << sell[0].inst << "," << sell[0].side << "," << sell[0].status << "," << quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
+                        output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << order.quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
+                        output << "ord" << sell[0].ord_id << "," << sell[0].client_id << "," << sell[0].inst << "," << sell[0].side << "," << sell[0].status << "," << order.quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
 
                         sell.erase(sell.begin());
 
@@ -101,22 +100,22 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
                         break;
                     }
 
-                    else if (sell[0].quantity > quantity)
+                    else if (sell[0].quantity > order.quantity)
                     {
                         order.status_int = 2;
                         order.status = "Fill";
                         sell[0].status_int = 3;
                         sell[0].status = "Pfill";
-                        sell[0].quantity = sell[0].quantity - quantity;
-                        output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
-                        output << "ord" << sell[0].ord_id << "," << sell[0].client_id << "," << sell[0].inst << "," << sell[0].side << "," << sell[0].status << "," << quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
+                        sell[0].quantity = sell[0].quantity - order.quantity;
+                        output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << order.quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
+                        output << "ord" << sell[0].ord_id << "," << sell[0].client_id << "," << sell[0].inst << "," << sell[0].side << "," << sell[0].status << "," << order.quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
 
                         
                         break;
                     }
 
                     else
-                    { // sell[0].quantity < quantity
+                    { // sell[0].quantity < order.quantity
                         order.status_int = 3;
                         order.status = "Pfill";
                         sell[0].status_int = 2;
@@ -125,20 +124,18 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
                         output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << sell[0].quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
                         output << "ord" << sell[0].ord_id << "," << sell[0].client_id << "," << sell[0].inst << "," << sell[0].side << "," << sell[0].status << "," << sell[0].quantity << "," << sell[0].price_string << ",  -  ," << getFormattedTime() << endl;
 
-                        if (b_check == 0)   //Check if its already inside vector
-                        {
+                    
+                        sell.erase(sell.begin());
 
-                            sell.erase(sell.begin());
+                        if ((!sell.empty()) && (sell[0].price > price)||(sell.empty())){
                             buy.push_back(order);
                             sort(buy.begin(), buy.end(), compareBuy);
-                            b_check = 1; // To make sure this order is already inside vector
+ 
                         }
 
-                        else    // The order is already inside vector
-                        {
-                            sell.erase(sell.begin());
-                            buy[0].quantity = buy[0].quantity - sell[0].quantity;
-                        }
+                        
+
+
                     }
                 }
             }
@@ -149,7 +146,7 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
                 order.status_int = 0;
                 order.status = "New";
 
-                output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << quantity << "," << price_string << ",  -  ," << getFormattedTime() << endl;
+                output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << order.quantity << "," << price_string << ",  -  ," << getFormattedTime() << endl;
 
                 buy.push_back(order);
                 sort(buy.begin(), buy.end(), compareBuy);
@@ -164,7 +161,7 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
             order.status_int = 0;
             order.status = "New";
 
-            output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << quantity << "," << price_string << ",  -  ," << getFormattedTime() << endl;
+            output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << order.quantity << "," << price_string << ",  -  ," << getFormattedTime() << endl;
 
             sell.push_back(order);
             sort(sell.begin(), sell.end(), compareSell);
@@ -179,14 +176,14 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
                 while ((!buy.empty()) && (buy[0].price >= price))
                 {
 
-                    if (buy[0].quantity == quantity)
+                    if (buy[0].quantity == order.quantity)
                     {
                         order.status_int = 2;
                         order.status = "Fill";
                         buy[0].status_int = 2;
                         buy[0].status = "Fill";
-                        output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
-                        output << "ord" << buy[0].ord_id << "," << buy[0].client_id << "," << buy[0].inst << "," << buy[0].side << "," << buy[0].status << "," << quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
+                        output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << order.quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
+                        output << "ord" << buy[0].ord_id << "," << buy[0].client_id << "," << buy[0].inst << "," << buy[0].side << "," << buy[0].status << "," << order.quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
 
                         buy.erase(buy.begin());
 
@@ -194,24 +191,24 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
                         break;
                     }
 
-                    else if (buy[0].quantity > quantity)
+                    else if (buy[0].quantity > order.quantity)
                     {
 
                         order.status_int = 2;
                         order.status = "Fill";
                         buy[0].status_int = 3;
                         buy[0].status = "Pfill";
-                        buy[0].quantity = buy[0].quantity - quantity;
+                        buy[0].quantity = buy[0].quantity - order.quantity;
 
-                        output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
-                        output << "ord" << buy[0].ord_id << "," << buy[0].client_id << "," << buy[0].inst << "," << buy[0].side << "," << buy[0].status << "," << quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
+                        output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << order.quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
+                        output << "ord" << buy[0].ord_id << "," << buy[0].client_id << "," << buy[0].inst << "," << buy[0].side << "," << buy[0].status << "," << order.quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
 
                         
                         break;
                     }
 
                     else
-                    { // buy[0].quantity< quantity
+                    { // buy[0].quantity< order.quantity
                         order.status_int = 3;
                         order.status = "Pfill";
                         buy[0].status_int = 2;
@@ -221,20 +218,19 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
                         output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << buy[0].quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
                         output << "ord" << buy[0].ord_id << "," << buy[0].client_id << "," << buy[0].inst << "," << buy[0].side << "," << buy[0].status << "," << buy[0].quantity << "," << buy[0].price_string << ",  -  ," << getFormattedTime() << endl;
 
-                        if (s_check == 0)
-                        {
+                        
 
-                            buy.erase(buy.begin());
+                        buy.erase(buy.begin());
+
+                        if ((!buy.empty()) && (price > buy[0].price)||(buy.empty())){
+
                             sell.push_back(order);
-                            sort(sell.begin(), sell.end(), compareSell);
-                            s_check = 1; // To make sure this order is already inside vector
+                            sort(sell.begin(), sell.end(), compareSell);                          
+ 
                         }
 
-                        else
-                        { // The order is already inside vector.
-                            buy.erase(buy.begin());
-                            sell[0].quantity = sell[0].quantity - buy[0].quantity;
-                        }
+
+
                     }
                 }
             }
@@ -243,7 +239,7 @@ void ProcessOrders(vector<Order_book> &buy, vector<Order_book> &sell, int side, 
             { // price is higher than buy[0].price. So just insert the object to buy vector
                 order.status = "New";
                 order.status_int = 0;
-                output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << quantity << "," << price_string << ",  -  ," << getFormattedTime() << endl;
+                output << "ord" << count << "," << client_id << "," << instrument << "," << side << "," << order.status << "," << order.quantity << "," << price_string << ",  -  ," << getFormattedTime() << endl;
                 sell.push_back(order);
                 sort(sell.begin(), sell.end(), compareSell);
             }
@@ -421,6 +417,7 @@ int main()
 
     file.close();
     output.close();
+
 
     return 0;
 }
